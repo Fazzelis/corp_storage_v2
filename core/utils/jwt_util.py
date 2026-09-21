@@ -1,10 +1,11 @@
 from datetime import datetime, timezone, timedelta
 from core.enums.jwt_type import TokenType
-from core.dto.JwtPayload import JwtPayload
+from core.dto.JwtDtos import JwtPayload, JwtDecodedData
 from configuration import Config
-from core.exceptions.jwt_exceptions import JwtTypeNotFoundException
+from core.exceptions.jwt_exceptions import JwtTypeNotFoundException, JwtDecodeErrorException
 from uuid import uuid4
 import jwt
+from jwt import DecodeError
 
 
 class JwtCodec:
@@ -38,3 +39,19 @@ class JwtCodec:
         )
 
         return encode, payload
+
+    async def decode(self, token: str):
+        try:
+            decoded = jwt.decode(
+                jwt=token,
+                key=self._settings.public_key,
+                algorithms=[self._settings.algorithm]
+            )
+            return JwtDecodedData(
+                sub=decoded["sub"],
+                exp=decoded["exp"],
+                iat=decoded["iat"],
+                jti=decoded["jti"]
+            )
+        except DecodeError:
+            raise JwtDecodeErrorException()
