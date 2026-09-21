@@ -1,3 +1,5 @@
 .env
 .idea
 secrets/
+alembic.ini
+migration/README
