@@ -3,3 +3,4 @@
 secrets/
 alembic.ini
 migration/README
+__pycache__/
