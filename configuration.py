@@ -13,6 +13,8 @@ class Config(BaseSettings):
     algorithm: str
     private_key: str
     public_key: str
+    generated_password_alphabet: str
+    generated_password_len: int
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
