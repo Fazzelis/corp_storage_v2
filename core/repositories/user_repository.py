@@ -11,12 +11,20 @@ class UserRepository:
         result = await self._db_session.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
-    async def post(self, email: str, password: str) -> User:
+    async def post(
+            self,
+            email: str,
+            password: str,
+            name: str,
+            surname: str,
+            patronymic: str | None
+    ) -> User:
         new_user = User(
             email=email,
             password=password,
-            name="new_user",
-            surname="new_user"
+            name=name,
+            surname=surname,
+            patronymic=patronymic
         )
 
         self._db_session.add(new_user)

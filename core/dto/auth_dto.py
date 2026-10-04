@@ -5,6 +5,10 @@ from dataclasses import dataclass
 class SuccessfulUserRegistration:
     id: str
     email: str
+    name: str
+    surname: str
+    patronymic: str | None = None
+    avatar_path: str | None = None
 
 
 @dataclass

@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends
 from core.services.auth_service import AuthService
 from core.dependencies import get_auth_service
-from api.schemas.auth_schemas import UserRegistrateResponse, LoginRequest, LoginResponse
+from api.schemas.auth_schemas import (
+    RegistrateRequest,
+    RegistrateResponse,
+    LoginRequest,
+    LoginResponse
+)
 
 
 router = APIRouter(
@@ -10,15 +15,19 @@ router = APIRouter(
 )
 
 
-@router.post("/registration", response_model=UserRegistrateResponse)
+@router.post("/registration", response_model=RegistrateResponse)
 async def registrate(
-        employee_email: str,
+        payload: RegistrateRequest,
         auth_service: AuthService = Depends(get_auth_service)
-) -> UserRegistrateResponse:
-    created_user = await auth_service.registrate_employee(email=employee_email)
-    return UserRegistrateResponse(
+) -> RegistrateResponse:
+    created_user = await auth_service.registrate_employee(payload)
+    return RegistrateResponse(
         id=created_user.id,
-        email=created_user.email
+        email=created_user.email,
+        name=created_user.name,
+        surname=created_user.surname,
+        patronymic=created_user.patronymic,
+        avatar_path=created_user.avatar_path
     )
 
 
