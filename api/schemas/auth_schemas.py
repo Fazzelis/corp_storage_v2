@@ -22,10 +22,16 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class TokenInfoResponse(BaseModel):
+    token: str
+    type: str
+
+
 class LoginResponse(BaseModel):
     id: str
     email: str
     name: str
     surname: str
+    token: TokenInfoResponse
     patronymic: str | None = None
     avatar_path: str | None = None

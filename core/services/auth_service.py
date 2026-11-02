@@ -1,13 +1,19 @@
+from core.enums.jwt_type import TokenType
 from core.repositories.user_repository import UserRepository
 from core.exceptions.auth_exceptions import UserAlreadyRegistered, InvalidLoginOrPassword
+from core.utils.jwt_util import JwtCodec
 from core.utils.password_generator import default_password_generator
 from core.dto.auth_dto import SuccessfulUserRegistration, SuccessfulUserLogin
 from core.utils.hasher import hasher
+from configuration import settings
+from logging import getLogger
 
 
 class AuthService:
     def __init__(self, user_repo: UserRepository):
         self._user_repository: UserRepository = user_repo
+        self._jwtCodec: JwtCodec = JwtCodec(settings)
+        self.logger = getLogger()
 
     async def registrate_employee(
             self,
@@ -20,9 +26,12 @@ class AuthService:
         if user:
             raise UserAlreadyRegistered()
 
+        password = default_password_generator.generate_password()
+        self.logger.info(f"Пароль от {email}: {password}")
+
         created_user = await self._user_repository.post(
             email=email,
-            password=hasher.hash(default_password_generator.generate_password()),
+            password=hasher.hash(password),
             name=name,
             surname=surname,
             patronymic=patronymic
@@ -41,11 +50,16 @@ class AuthService:
         if not user or not hasher.verify(password, user.password):
             raise InvalidLoginOrPassword()
 
+        access_token = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.ACCESS)
+        refresh_token = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.REFRESH)
+
         return SuccessfulUserLogin(
             id=user.id,
             email=user.email,
             name=user.name,
             surname=user.surname,
+            access_token=access_token,
+            refresh_token=refresh_token,
             patronymic=user.patronymic,
             avatar_path=user.avatar_path
         )

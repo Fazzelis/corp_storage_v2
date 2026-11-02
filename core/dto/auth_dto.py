@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 
 @dataclass
 class SuccessfulUserRegistration:
-    id: str
+    id: UUID
     email: str
     name: str
     surname: str
@@ -13,9 +14,11 @@ class SuccessfulUserRegistration:
 
 @dataclass
 class SuccessfulUserLogin:
-    id: str
+    id: UUID
     email: str
     name: str
     surname: str
+    access_token: str
+    refresh_token: str
     patronymic: str | None = None
     avatar_path: str | None = None

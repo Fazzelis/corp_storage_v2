@@ -17,6 +17,7 @@ class JwtPayload:
 @dataclass
 class JwtDecodedData:
     sub: UUID
-    exp: datetime
-    iat: datetime
+    type: TokenType
     jti: str
+    iat: datetime
+    exp: datetime
