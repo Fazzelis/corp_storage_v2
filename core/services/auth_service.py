@@ -7,6 +7,7 @@ from core.dto.auth_dto import SuccessfulUserRegistration, SuccessfulUserLogin
 from core.utils.hasher import hasher
 from configuration import settings
 from logging import getLogger
+from core.utils.mail_sender import MailSender
 
 
 class AuthService:
@@ -14,6 +15,7 @@ class AuthService:
         self._user_repository: UserRepository = user_repo
         self._jwtCodec: JwtCodec = JwtCodec(settings)
         self.logger = getLogger()
+        self._mail_sender: MailSender = MailSender()
 
     async def registrate_employee(
             self,
@@ -28,6 +30,8 @@ class AuthService:
 
         password = default_password_generator.generate_password()
         self.logger.info(f"Пароль от {email}: {password}")
+
+        await self._mail_sender.send_verify_code(to_email=email, code=password)
 
         created_user = await self._user_repository.post(
             email=email,
