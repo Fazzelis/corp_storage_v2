@@ -12,7 +12,6 @@ from api.schemas.user_schemas import (
 from api.schemas.default_schema import DefaultSchema
 from configuration import settings
 from core.dependencies import get_user_service, get_jwt_codec
-from core.dto.user_dto import UserDto
 from core.enums.jwt_type import TokenType
 from core.services.user_service import UserService
 from core.utils.jwt_util import JwtCodec
