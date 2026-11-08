@@ -10,6 +10,21 @@ class UserService:
     def __init__(self, user_repo: UserRepository):
         self._user_repository: UserRepository = user_repo
 
+    async def get_user(self, user_id: UUID) -> UserDto:
+        user = await self._user_repository.get_by_id(user_id=user_id)
+        if not user:
+            raise UserNotFound
+        if user.must_change_password:
+            raise UserMustChangePassword()
+        return UserDto(
+            email=user.email,
+            name=user.name,
+            surname=user.surname,
+            patronymic=user.patronymic,
+            avatar_path=user.avatar_path,
+            must_change_password=user.must_change_password
+        )
+
     async def change_password(self, user_id: UUID, new_password: str):
         user = await self._user_repository.get_by_id(user_id)
         if not user:

@@ -12,6 +12,7 @@ from api.schemas.user_schemas import (
 from api.schemas.default_schema import DefaultSchema
 from configuration import settings
 from core.dependencies import get_user_service, get_jwt_codec
+from core.dto.user_dto import UserDto
 from core.enums.jwt_type import TokenType
 from core.services.user_service import UserService
 from core.utils.jwt_util import JwtCodec
@@ -20,6 +21,17 @@ router = APIRouter(
     prefix="/user",
     tags=["User"]
 )
+
+@router.get("/profile")
+async def get_profile(
+    credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
+    user_service: UserService = Depends(get_user_service),
+    jwt_codec: JwtCodec = Depends(get_jwt_codec)
+):
+    access_token = jwt_codec.decode(token=credentials.credentials, expected_type=TokenType.ACCESS)
+    user_dto = await user_service.get_user(user_id=access_token.sub)
+    return UserInfoResponse.model_validate(user_dto)
+
 
 @router.post("/change-password", response_model=ChangePasswordResponse)
 async def change_password(
