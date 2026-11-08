@@ -10,7 +10,6 @@ from api.schemas.auth_schemas import (
 )
 from configuration import settings
 
-
 router = APIRouter(
     prefix="/auth",
     tags=["Authorization"]

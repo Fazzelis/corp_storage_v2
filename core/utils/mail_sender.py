@@ -13,7 +13,7 @@ class MailSender:
         server.login(settings.email_login, settings.email_password)
 
         msg = MIMEText(
-            f"Вас пригласили в корпоративное хранилище файлов! Данные для входа в систему: почта: {to_email}, код: {code}",
+            f"Вас пригласили в корпоративное хранилище файлов! Данные для входа в систему: почта: {to_email}, пароль: {code}",
             "plain",
             "utf-8"
         )

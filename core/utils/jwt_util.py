@@ -2,10 +2,15 @@ from datetime import datetime, timezone, timedelta
 from core.enums.jwt_type import TokenType
 from core.dto.JwtDtos import JwtPayload, JwtDecodedData
 from configuration import Config
-from core.exceptions.jwt_exceptions import JwtTypeNotFoundException, JwtDecodeErrorException
+from core.exceptions.jwt_exceptions import (
+    JwtTypeNotFoundException,
+    ExpiredTokenException,
+    WrongTokenTypeException,
+    TokenDecodeException
+)
 from uuid import uuid4, UUID
 import jwt
-from jwt import DecodeError
+from jwt import ExpiredSignatureError, InvalidTokenError
 
 
 class JwtCodec:
@@ -36,7 +41,7 @@ class JwtCodec:
 
         return encode
 
-    def decode(self, token: str):
+    def decode(self, token: str, expected_type: TokenType):
         try:
             decoded = jwt.decode(
                 jwt=token,
@@ -44,6 +49,8 @@ class JwtCodec:
                 algorithms=[self._settings.algorithm],
                 options={"required": ["sub", "type", "jti", "iat", "exp"]},
             )
+            if decoded.get("type") != expected_type.value:
+                raise WrongTokenTypeException()
             return JwtDecodedData(
                 sub=decoded["sub"],
                 type=decoded["type"],
@@ -51,5 +58,7 @@ class JwtCodec:
                 iat=decoded["iat"],
                 exp=decoded["exp"],
             )
-        except DecodeError:
-            raise JwtDecodeErrorException()
+        except ExpiredSignatureError:
+            raise ExpiredTokenException()
+        except InvalidTokenError:
+            raise TokenDecodeException()
