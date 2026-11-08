@@ -21,13 +21,13 @@ router = APIRouter(
     tags=["User"]
 )
 
-@router.post("/change-password")
+@router.post("/change-password", response_model=ChangePasswordResponse)
 async def change_password(
         payload: ChangePasswordRequest,
         credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
         user_service: UserService = Depends(get_user_service),
         jwt_codec: JwtCodec = Depends(get_jwt_codec)
-):
+) -> ChangePasswordResponse:
     access_token = jwt_codec.decode(token=credentials.credentials, expected_type=TokenType.ACCESS)
     result = await user_service.change_password(user_id=UUID(access_token.sub), new_password=payload.new_password)
     return ChangePasswordResponse(
@@ -35,13 +35,13 @@ async def change_password(
     )
 
 
-@router.patch("/change-profile-info")
+@router.patch("/change-profile-info", response_model=UserInfoResponse | DefaultSchema)
 async def change_profile_info(
         payload: ChangeProfileInfoRequest,
         credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
         user_service: UserService = Depends(get_user_service),
         jwt_codec: JwtCodec = Depends(get_jwt_codec)
-):
+) -> UserInfoResponse | DefaultSchema:
     access_token = jwt_codec.decode(token=credentials.credentials, expected_type=TokenType.ACCESS)
     payload_dict = payload.model_dump(exclude_unset=True)
     if len(payload_dict) == 0:
