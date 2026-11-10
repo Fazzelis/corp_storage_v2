@@ -1,10 +1,15 @@
 from fastapi import FastAPI
+
 from core.exceptions.auth_exceptions import UserAlreadyRegistered, InvalidLoginOrPassword
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,
     ExpiredTokenException,
     WrongTokenTypeException,
     TokenDecodeException
+)
+from core.exceptions.user_exceptions import (
+    UserNotFound,
+    UserMustChangePassword
 )
 from api.exceptions.exception_handler import ExceptionHandler
 
@@ -33,4 +38,12 @@ def registrate_all_exceptions(app: FastAPI):
     app.add_exception_handler(
         TokenDecodeException,
         ExceptionHandler.token_decode_exception_handler
+    )
+    app.add_exception_handler(
+        UserNotFound,
+        ExceptionHandler.user_not_found_exception_handler
+    )
+    app.add_exception_handler(
+        UserMustChangePassword,
+        ExceptionHandler.user_must_change_password_exception_handler
     )

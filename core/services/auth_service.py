@@ -6,13 +6,18 @@ from core.utils.password_generator import default_password_generator
 from core.dto.auth_dto import SuccessfulUserRegistration, SuccessfulUserLogin
 from core.utils.hasher import hasher
 from configuration import settings
-from logging import getLogger
 from core.utils.mail_sender import MailSender
+from core.repositories.refresh_token_repository import RefreshTokenRepository
+from core.enums.refresh_token_status_enum import RefreshTokenStatusEnum
+
+from logging import getLogger
+from uuid import UUID
 
 
 class AuthService:
-    def __init__(self, user_repo: UserRepository):
+    def __init__(self, user_repo: UserRepository, refresh_token_repo: RefreshTokenRepository):
         self._user_repository: UserRepository = user_repo
+        self._refresh_token_repository: RefreshTokenRepository = refresh_token_repo
         self._jwtCodec: JwtCodec = JwtCodec(settings)
         self.logger = getLogger()
         self._mail_sender: MailSender = MailSender()
@@ -54,8 +59,17 @@ class AuthService:
         if not user or not hasher.verify(password, user.password):
             raise InvalidLoginOrPassword()
 
-        access_token = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.ACCESS)
-        refresh_token = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.REFRESH)
+        access_token, _ = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.ACCESS)
+        refresh_token, refresh_info = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.REFRESH)
+
+        await self._refresh_token_repository.post(
+            jti=refresh_info.jti,
+            family_id=refresh_info.family_id,
+            status=RefreshTokenStatusEnum.ACTIVE,
+            expires_at=refresh_info.exp,
+            created_at=refresh_info.iat,
+            user_id=user.id
+        )
 
         return SuccessfulUserLogin(
             id=user.id,

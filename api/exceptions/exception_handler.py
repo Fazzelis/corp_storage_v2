@@ -8,6 +8,11 @@ from core.exceptions.jwt_exceptions import (
     WrongTokenTypeException,
     TokenDecodeException
 )
+from core.exceptions.user_exceptions import (
+    UserNotFound,
+    UserMustChangePassword
+)
+
 from fastapi import HTTPException, status
 
 
@@ -46,6 +51,18 @@ class ExceptionHandler:
         )
 
     async def token_decode_exception_handler(self, exc: TokenDecodeException):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exc)
+        )
+
+    async def user_not_found_exception_handler(self, exc: UserNotFound):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc)
+        )
+
+    async def user_must_change_password_exception_handler(self, exc: UserMustChangePassword):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc)
