@@ -2,8 +2,8 @@ from database.database import Base
 from core.enums.refresh_token_status_enum import RefreshTokenStatusEnum
 
 from uuid import UUID, uuid4
-from sqlalchemy import Uuid, Enum, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Uuid, Enum, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
 
@@ -19,5 +19,11 @@ class RefreshToken(Base):
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    rotated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    revoked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    rotated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    user: Mapped["User"] = relationship("User", back_populates="refresh_tokens")
