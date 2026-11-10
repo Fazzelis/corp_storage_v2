@@ -19,7 +19,7 @@ class JwtCodec:
     def __init__(self, settings: Config):
         self._settings = settings
 
-    def encode(self, user_id: UUID, token_type: TokenType) -> tuple[str, JwtPayload]:
+    def encode(self, user_id: UUID, token_type: TokenType, family_id: UUID | None = None) -> tuple[str, dict]:
         if token_type == TokenType.ACCESS:
             token_ttl = self._settings.access_token_ttl
         elif token_type == TokenType.REFRESH:
@@ -28,42 +28,40 @@ class JwtCodec:
             raise JwtTypeNotFoundException()
 
         now = datetime.now(timezone.utc)
-        payload = JwtPayload(
-            sub=user_id,
-            type=token_type,
-            jti=uuid4(),
-            iat=now,
-            exp=now + timedelta(minutes=token_ttl),
-            role=UserRoleEnum.EMPLOYER,
-            family_id=uuid4(),
-        )
+        payload = {
+            "sub": str(user_id),
+            "type": token_type.value,
+            "jti": str(uuid4()),
+            "iat": now,
+            "exp": now + timedelta(minutes=token_ttl),
+            "role": UserRoleEnum.EMPLOYER.value,
+        }
+        if token_type == TokenType.REFRESH:
+            if family_id is not None:
+                payload["family_id"] = str(family_id)
+            else:
+                payload["family_id"] = str(uuid4())
 
         encode = jwt.encode(
-            payload={
-                "sub": str(payload.sub),
-                "type": payload.type.value,
-                "jti": str(payload.jti),
-                "iat": payload.iat,
-                "exp": payload.exp,
-                "role": payload.role.value,
-                "family_id": str(payload.family_id),
-            },
+            payload=payload,
             key=self._settings.private_key,
             algorithm=self._settings.algorithm
         )
 
         return encode, payload
 
-    def decode(self, token: str, expected_type: TokenType):
+    def decode(self, token: str, expected_type: TokenType) -> JwtDecodedData:
         try:
             decoded = jwt.decode(
                 jwt=token,
                 key=self._settings.public_key,
                 algorithms=[self._settings.algorithm],
-                options={"required": ["sub", "type", "jti", "iat", "exp", "role", "family_id"]},
+                options={"required": ["sub", "type", "jti", "iat", "exp", "role"]},
             )
             if decoded.get("type") != expected_type.value:
                 raise WrongTokenTypeException()
+            if expected_type == TokenType.REFRESH and "family_id" not in decoded:
+                raise TokenDecodeException()
             return JwtDecodedData(
                 sub=decoded["sub"],
                 type=decoded["type"],
@@ -71,7 +69,7 @@ class JwtCodec:
                 iat=decoded["iat"],
                 exp=decoded["exp"],
                 role=decoded["role"],
-                family_id=decoded["family_id"]
+                family_id=decoded.get("family_id")
             )
         except ExpiredSignatureError:
             raise ExpiredTokenException()

@@ -1,9 +1,18 @@
+from core.dto.JwtDtos import JwtDecodedData
 from core.enums.jwt_type import TokenType
 from core.repositories.user_repository import UserRepository
-from core.exceptions.auth_exceptions import UserAlreadyRegistered, InvalidLoginOrPassword
+from core.exceptions.auth_exceptions import (
+    UserAlreadyRegistered,
+    InvalidLoginOrPassword,
+    RefreshTokenNotFound
+)
 from core.utils.jwt_util import JwtCodec
 from core.utils.password_generator import default_password_generator
-from core.dto.auth_dto import SuccessfulUserRegistration, SuccessfulUserLogin
+from core.dto.auth_dto import (
+    SuccessfulUserRegistration,
+    SuccessfulUserLogin,
+    SuccessfulRefresh
+)
 from core.utils.hasher import hasher
 from configuration import settings
 from core.utils.mail_sender import MailSender
@@ -63,11 +72,11 @@ class AuthService:
         refresh_token, refresh_info = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.REFRESH)
 
         await self._refresh_token_repository.post(
-            jti=refresh_info.jti,
-            family_id=refresh_info.family_id,
+            jti=refresh_info["jti"],
+            family_id=refresh_info["family_id"],
             status=RefreshTokenStatusEnum.ACTIVE,
-            expires_at=refresh_info.exp,
-            created_at=refresh_info.iat,
+            expires_at=refresh_info["exp"],
+            created_at=refresh_info["iat"],
             user_id=user.id
         )
 
@@ -80,4 +89,34 @@ class AuthService:
             refresh_token=refresh_token,
             patronymic=user.patronymic,
             avatar_path=user.avatar_path
+        )
+
+    async def refresh(self, old_refresh_token: JwtDecodedData) -> SuccessfulRefresh:
+        old_refresh_token_db = await self._refresh_token_repository.get_by_jti(jti=UUID(old_refresh_token.jti))
+        if not old_refresh_token_db:
+            raise RefreshTokenNotFound()
+        await self._refresh_token_repository.set_rotated(jti=old_refresh_token_db.jti)
+
+        access_token, _ = self._jwtCodec.encode(
+            user_id=old_refresh_token_db.user_id,
+            token_type=TokenType.ACCESS
+        )
+        refresh_token, refresh_info = self._jwtCodec.encode(
+            user_id=old_refresh_token_db.user_id,
+            token_type=TokenType.REFRESH,
+            family_id=old_refresh_token_db.family_id
+        )
+
+        await self._refresh_token_repository.post(
+            jti=refresh_info["jti"],
+            family_id=refresh_info["family_id"],
+            status=RefreshTokenStatusEnum.ACTIVE,
+            expires_at=refresh_info["exp"],
+            created_at=refresh_info["iat"],
+            user_id=old_refresh_token_db.user_id
+        )
+
+        return SuccessfulRefresh(
+            access_token=access_token,
+            refresh_token=refresh_token,
         )

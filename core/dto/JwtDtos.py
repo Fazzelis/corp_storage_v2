@@ -15,7 +15,7 @@ class JwtPayload:
     iat: datetime
     exp: datetime
     role: UserRoleEnum
-    family_id: UUID
+    family_id: UUID | None = None
 
 
 @dataclass
@@ -26,4 +26,4 @@ class JwtDecodedData:
     iat: datetime
     exp: datetime
     role: UserRoleEnum
-    family_id: UUID
+    family_id: UUID | None = None

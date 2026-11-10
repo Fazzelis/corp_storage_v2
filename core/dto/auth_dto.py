@@ -22,3 +22,9 @@ class SuccessfulUserLogin:
     refresh_token: str
     patronymic: str | None = None
     avatar_path: str | None = None
+
+
+@dataclass
+class SuccessfulRefresh:
+    access_token: str
+    refresh_token: str

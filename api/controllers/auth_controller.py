@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response, HTTPException, status
+from fastapi import APIRouter, Depends, Response, HTTPException, status, Cookie
 from fastapi.security import HTTPAuthorizationCredentials
 
 from core.services.auth_service import AuthService
@@ -78,4 +78,34 @@ async def login(
         ),
         patronymic=user_info.patronymic,
         avatar_path=user_info.avatar_path,
+    )
+
+
+@router.get("/refresh", response_model=TokenInfoResponse)
+async def refresh(
+        response: Response,
+        refresh_token: str | None = Cookie(default=None),
+        auth_service: AuthService = Depends(get_auth_service),
+        jwt_codec: JwtCodec = Depends(get_jwt_codec),
+):
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh токен не найден"
+        )
+    decoded_refresh_token = jwt_codec.decode(refresh_token, expected_type=TokenType.REFRESH)
+    result = await auth_service.refresh(old_refresh_token=decoded_refresh_token)
+
+    response.set_cookie(
+        key="refresh_token",
+        value=result.refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=settings.refresh_token_ttl_for_browser
+    )
+
+    return TokenInfoResponse(
+        token=result.access_token,
+        type="Bearer"
     )
