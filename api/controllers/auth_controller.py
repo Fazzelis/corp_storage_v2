@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
+
 from core.services.auth_service import AuthService
-from core.dependencies import get_auth_service
+from core.dependencies import get_auth_service, get_jwt_codec
 from api.schemas.auth_schemas import (
     RegistrateRequest,
     RegistrateResponse,
@@ -9,6 +11,9 @@ from api.schemas.auth_schemas import (
     LoginResponse,
 )
 from configuration import settings
+from core.utils.jwt_util import JwtCodec
+from core.enums.jwt_type import TokenType
+from core.enums.user_role_enum import UserRoleEnum
 
 router = APIRouter(
     prefix="/auth",
@@ -19,8 +24,16 @@ router = APIRouter(
 @router.post("/registration", response_model=RegistrateResponse)
 async def registrate(
         payload: RegistrateRequest,
+        jwt_codec: JwtCodec = Depends(get_jwt_codec),
+        credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
         auth_service: AuthService = Depends(get_auth_service)
 ) -> RegistrateResponse:
+    access_token = jwt_codec.decode(credentials.credentials, TokenType.ACCESS)
+    if access_token.role != UserRoleEnum.DIRECTOR.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Нет прав"
+        )
     created_user = await auth_service.registrate_employee(
         email=payload.email,
         name=payload.name,
