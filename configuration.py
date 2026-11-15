@@ -19,6 +19,9 @@ class Config(BaseSettings):
     smtp_port: int
     email_login: str
     email_password: str
+    ssl_certfile: str
+    ssl_keyfile: str
+    ssl_keyfile_password: str
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
