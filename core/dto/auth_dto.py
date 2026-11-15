@@ -20,6 +20,7 @@ class SuccessfulUserLogin:
     surname: str
     access_token: str
     refresh_token: str
+    must_change_password: bool
     patronymic: str | None = None
     avatar_path: str | None = None
 

@@ -68,8 +68,8 @@ class AuthService:
         if not user or not hasher.verify(password, user.password):
             raise InvalidLoginOrPassword()
 
-        access_token, _ = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.ACCESS)
-        refresh_token, refresh_info = self._jwtCodec.encode(user_id=user.id, token_type=TokenType.REFRESH)
+        access_token, _ = self._jwtCodec.encode(user_id=user.id, role=user.role, token_type=TokenType.ACCESS)
+        refresh_token, refresh_info = self._jwtCodec.encode(user_id=user.id, role=user.role, token_type=TokenType.REFRESH)
 
         await self._refresh_token_repository.post(
             jti=refresh_info["jti"],
@@ -88,7 +88,8 @@ class AuthService:
             access_token=access_token,
             refresh_token=refresh_token,
             patronymic=user.patronymic,
-            avatar_path=user.avatar_path
+            avatar_path=user.avatar_path,
+            must_change_password=user.must_change_password
         )
 
     async def refresh(self, old_refresh_token: JwtDecodedData) -> SuccessfulRefresh:
@@ -99,10 +100,12 @@ class AuthService:
 
         access_token, _ = self._jwtCodec.encode(
             user_id=old_refresh_token_db.user_id,
+            role=old_refresh_token.role,
             token_type=TokenType.ACCESS
         )
         refresh_token, refresh_info = self._jwtCodec.encode(
             user_id=old_refresh_token_db.user_id,
+            role=old_refresh_token.role,
             token_type=TokenType.REFRESH,
             family_id=old_refresh_token_db.family_id
         )

@@ -1,5 +1,5 @@
 from core.enums.jwt_type import TokenType
-from core.dto.JwtDtos import JwtPayload, JwtDecodedData
+from core.dto.JwtDtos import JwtDecodedData
 from configuration import Config
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,
@@ -19,7 +19,7 @@ class JwtCodec:
     def __init__(self, settings: Config):
         self._settings = settings
 
-    def encode(self, user_id: UUID, token_type: TokenType, family_id: UUID | None = None) -> tuple[str, dict]:
+    def encode(self, user_id: UUID, token_type: TokenType, role: UserRoleEnum, family_id: UUID | None = None) -> tuple[str, dict]:
         if token_type == TokenType.ACCESS:
             token_ttl = self._settings.access_token_ttl
         elif token_type == TokenType.REFRESH:
@@ -34,7 +34,7 @@ class JwtCodec:
             "jti": str(uuid4()),
             "iat": now,
             "exp": now + timedelta(minutes=token_ttl),
-            "role": UserRoleEnum.EMPLOYER.value,
+            "role": role.value,
         }
         if token_type == TokenType.REFRESH:
             if family_id is not None:

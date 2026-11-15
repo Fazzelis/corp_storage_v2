@@ -78,6 +78,7 @@ async def login(
         ),
         patronymic=user_info.patronymic,
         avatar_path=user_info.avatar_path,
+        must_change_password=user_info.must_change_password
     )
 
 
