@@ -1,4 +1,4 @@
-import random
+import secrets
 from configuration import settings
 
 
@@ -8,11 +8,7 @@ class PasswordGenerator:
         self._password_len = password_len if password_len is not None else settings.generated_password_len
 
     def generate_password(self) -> str:
-        password = ""
-        for _ in range(self._password_len):
-            password += random.choice(self._chars_list)
-
-        return password
+        return "".join(secrets.choice(self._chars_list) for _ in range(self._password_len))
 
 
 default_password_generator = PasswordGenerator()
