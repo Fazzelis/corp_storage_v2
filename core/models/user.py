@@ -29,3 +29,8 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+    recovery_codes: Mapped[list["RecoveryCode"]] = relationship(
+        "RecoveryCode",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
