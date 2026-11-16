@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from uuid import UUID
+from datetime import datetime
 
 
 @dataclass
@@ -29,3 +30,9 @@ class SuccessfulUserLogin:
 class SuccessfulRefresh:
     access_token: str
     refresh_token: str
+
+
+@dataclass
+class RecoveryTicketDto:
+    recovery_ticket: str
+    expires_at: datetime

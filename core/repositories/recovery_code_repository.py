@@ -1,6 +1,6 @@
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 from core.models.recovery_code import RecoveryCode
 from datetime import datetime, timezone, timedelta
 
@@ -23,3 +23,35 @@ class RecoveryCodeRepository:
         await self._db.commit()
         await self._db.refresh(code_db)
         return code_db
+
+    async def invalidate(self, recovery_code_id: UUID) -> None:
+        await self._db.execute(
+            update(RecoveryCode)
+            .where(
+                RecoveryCode.id == recovery_code_id,
+                RecoveryCode.expires_at > datetime.now(timezone.utc)
+            )
+            .values(used_at=datetime.now(timezone.utc))
+        )
+        await self._db.commit()
+
+    async def add_attempt(self, recovery_code_id: UUID) -> None:
+        await self._db.execute(
+            update(RecoveryCode)
+            .where(RecoveryCode.id == recovery_code_id)
+            .values(attempts=RecoveryCode.attempts + 1)
+        )
+        await self._db.commit()
+
+    async def get_by_user_id(self, user_id: UUID) -> RecoveryCode | None:
+        result = await self._db.execute(
+            select(RecoveryCode)
+            .where(
+                RecoveryCode.user_id == user_id,
+                RecoveryCode.used_at.is_(None),
+                RecoveryCode.expires_at > datetime.now(timezone.utc),
+                RecoveryCode.attempts < 5
+            )
+        )
+
+        return result.scalar_one_or_none()

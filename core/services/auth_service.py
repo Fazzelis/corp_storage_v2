@@ -1,18 +1,19 @@
 from core.dto.jwt_dto import JwtDecodedData
 from core.dto.default_dto import DefaultDto
 from core.enums.jwt_type import TokenType
-from core.exceptions.user_exceptions import UserNotFound
 from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
     InvalidLoginOrPassword,
-    RefreshTokenNotFound
+    RefreshTokenNotFound,
+    InvalidRecoveryCode
 )
 from core.utils.jwt_util import JwtCodec
 from core.utils.password_generator import default_password_generator
 from core.dto.auth_dto import (
     SuccessfulUserRegistration,
     SuccessfulUserLogin,
-    SuccessfulRefresh
+    SuccessfulRefresh,
+    RecoveryTicketDto
 )
 from core.utils.hasher import hasher
 from configuration import settings
@@ -20,21 +21,25 @@ from core.utils.mail_sender import MailSender
 from core.repositories.refresh_token_repository import RefreshTokenRepository
 from core.repositories.recovery_code_repository import RecoveryCodeRepository
 from core.repositories.user_repository import UserRepository
+from core.repositories.recovery_ticket_repository import RecoveryTicketRepository
 from core.enums.refresh_token_status_enum import RefreshTokenStatusEnum
 
 from logging import getLogger
 from uuid import UUID
+import secrets
 
 
 class AuthService:
     def __init__(
             self, user_repo: UserRepository,
             refresh_token_repo: RefreshTokenRepository,
-            recovery_code_repo: RecoveryCodeRepository
+            recovery_code_repo: RecoveryCodeRepository,
+            recovery_ticket_repo: RecoveryTicketRepository
     ):
         self._user_repository: UserRepository = user_repo
         self._refresh_token_repository: RefreshTokenRepository = refresh_token_repo
         self._recovery_code_repository: RecoveryCodeRepository = recovery_code_repo
+        self._recovery_ticket_repository: RecoveryTicketRepository = recovery_ticket_repo
         self._jwtCodec: JwtCodec = JwtCodec(settings)
         self.logger = getLogger()
         self._mail_sender: MailSender = MailSender()
@@ -138,6 +143,9 @@ class AuthService:
             return DefaultDto(
                 message="Если пользователь существует, ему отправился код подтверждения на почту"
             )
+        old_recovery_code = await self._recovery_code_repository.get_by_user_id(user_id=user.id)
+        if old_recovery_code:
+            await self._recovery_code_repository.invalidate(recovery_code_id=old_recovery_code.id)
         recovery_code = default_password_generator.generate_password()
         await self._recovery_code_repository.post(
             user_id=user.id,
@@ -147,4 +155,31 @@ class AuthService:
 
         return DefaultDto(
             message="Если пользователь существует, ему отправился код подтверждения на почту"
+        )
+
+    async def verify_recovery_code(self, email: str, recovery_code: str) -> RecoveryTicketDto:
+        user = await self._user_repository.get_by_email(email=email)
+        if not user:
+            raise InvalidRecoveryCode()
+
+        recovery_code_db = await self._recovery_code_repository.get_by_user_id(user_id=user.id)
+        if not recovery_code_db:
+            raise InvalidRecoveryCode()
+        if not hasher.verify(recovery_code, recovery_code_db.code):
+            await self._recovery_code_repository.add_attempt(recovery_code_id=recovery_code_db.id)
+            raise InvalidRecoveryCode()
+        await self._recovery_code_repository.invalidate(recovery_code_id=recovery_code_db.id)
+
+        recovery_ticket = secrets.token_urlsafe(32)
+        old_recovery_ticket = await self._recovery_ticket_repository.get_by_user_id(user_id=user.id)
+        if old_recovery_ticket:
+            await self._recovery_ticket_repository.invalidate(recovery_ticket_id=old_recovery_ticket.id)
+        await self._recovery_ticket_repository.post(
+            user_id=user.id,
+            ticket_hash=hasher.hash(recovery_ticket)
+        )
+
+        return RecoveryTicketDto(
+            recovery_ticket=recovery_ticket,
+            expires_at=recovery_code_db.expires_at,
         )

@@ -9,6 +9,7 @@ class Config(BaseSettings):
     access_token_ttl_for_browser: int = access_token_ttl*60
     refresh_token_ttl_for_browser: int = refresh_token_ttl*60
     recovery_code_ttl: int = 10 # minutes
+    recovery_ticket_ttl: int = 2 # minutes
     http_bearer: ClassVar = HTTPBearer()
     database_url: str
     algorithm: str

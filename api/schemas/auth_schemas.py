@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class RegistrateRequest(BaseModel):
@@ -43,3 +44,13 @@ class SendRecoveryCodeRequest(BaseModel):
 
 class SendRecoveryCodeResponse(BaseModel):
     message: str
+
+
+class VerifyRecoveryCodeRequest(BaseModel):
+    email: str
+    recovery_code: str
+
+
+class VerifyRecoveryCodeResponse(BaseModel):
+    recovery_ticket: str
+    expires_at: datetime

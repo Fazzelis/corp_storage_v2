@@ -6,6 +6,7 @@ from core.repositories.user_repository import UserRepository
 from database.database import get_db
 from core.repositories.refresh_token_repository import RefreshTokenRepository
 from core.repositories.recovery_code_repository import RecoveryCodeRepository
+from core.repositories.recovery_ticket_repository import RecoveryTicketRepository
 
 from fastapi import Depends
 
@@ -21,7 +22,8 @@ def get_auth_service(db_session=Depends(get_db)):
     return AuthService(
         user_repo=UserRepository(db_session=db_session),
         refresh_token_repo=RefreshTokenRepository(db=db_session),
-        recovery_code_repo=RecoveryCodeRepository(db=db_session)
+        recovery_code_repo=RecoveryCodeRepository(db=db_session),
+        recovery_ticket_repo=RecoveryTicketRepository(db=db_session),
     )
 
 

@@ -14,3 +14,8 @@ class InvalidLoginOrPassword(BaseApplicationException):
 class RefreshTokenNotFound(BaseApplicationException):
     def __init__(self):
         super().__init__("Refresh токен не найден")
+
+
+class InvalidRecoveryCode(BaseApplicationException):
+    def __init__(self):
+        super().__init__("Неправильный код")

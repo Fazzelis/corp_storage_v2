@@ -1,6 +1,8 @@
 from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
-    InvalidLoginOrPassword
+    InvalidLoginOrPassword,
+    RefreshTokenNotFound,
+    InvalidRecoveryCode
 )
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,
@@ -29,6 +31,18 @@ class ExceptionHandler:
     async def invalid_login_or_password_handler(self, exc: InvalidLoginOrPassword):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc)
+        )
+
+    async def refresh_token_not_found_handler(self, exc: RefreshTokenNotFound):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exc)
+        )
+
+    async def invalid_recover_code_handler(self, exc: InvalidRecoveryCode):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc)
         )
 
