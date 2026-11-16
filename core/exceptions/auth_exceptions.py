@@ -19,3 +19,8 @@ class RefreshTokenNotFound(BaseApplicationException):
 class InvalidRecoveryCode(BaseApplicationException):
     def __init__(self):
         super().__init__("Неправильный код")
+
+
+class InvalidTicket(BaseApplicationException):
+    def __init__(self):
+        super().__init__("Неправильный тикет восстановления пароля")

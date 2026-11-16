@@ -33,9 +33,9 @@ class LoginResponse(BaseModel):
     email: str
     name: str
     surname: str
+    patronymic: str | None = None
     token: TokenInfoResponse
     must_change_password: bool
-    patronymic: str | None = None
     avatar_path: str | None = None
 
 
@@ -54,3 +54,12 @@ class VerifyRecoveryCodeRequest(BaseModel):
 class VerifyRecoveryCodeResponse(BaseModel):
     recovery_ticket: str
     expires_at: datetime
+
+
+class ChangePasswordRequest(BaseModel):
+    recovery_ticket: str
+    new_password: str
+
+
+class ChangePasswordResponse(BaseModel):
+    message: str

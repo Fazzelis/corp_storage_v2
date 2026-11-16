@@ -4,7 +4,7 @@ from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
     InvalidLoginOrPassword,
     RefreshTokenNotFound,
-    InvalidRecoveryCode
+    InvalidRecoveryCode, InvalidTicket
 )
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,
@@ -35,6 +35,10 @@ def registrate_all_exceptions(app: FastAPI):
     app.add_exception_handler(
         InvalidRecoveryCode,
         ExceptionHandler.invalid_recover_code_handler
+    )
+    app.add_exception_handler(
+        InvalidTicket,
+        ExceptionHandler.invalid_ticket_handler
     )
     app.add_exception_handler(
         JwtTypeNotFoundException,

@@ -12,7 +12,9 @@ from api.schemas.auth_schemas import (
     SendRecoveryCodeRequest,
     SendRecoveryCodeResponse,
     VerifyRecoveryCodeRequest,
-    VerifyRecoveryCodeResponse
+    VerifyRecoveryCodeResponse,
+    ChangePasswordRequest,
+    ChangePasswordResponse
 )
 from configuration import settings
 from core.utils.jwt_util import JwtCodec
@@ -136,4 +138,17 @@ async def verify_recovery_code(
     return VerifyRecoveryCodeResponse(
         recovery_ticket=result.recovery_ticket,
         expires_at=result.expires_at
+    )
+
+@router.post("password-recovery/change-password")
+async def change_password(
+        payload: ChangePasswordRequest,
+        auth_service: AuthService = Depends(get_auth_service)
+):
+    result = await auth_service.change_password(
+        recovery_ticket=payload.recovery_ticket,
+        new_password=payload.new_password
+    )
+    return ChangePasswordResponse(
+        message=result.message
     )

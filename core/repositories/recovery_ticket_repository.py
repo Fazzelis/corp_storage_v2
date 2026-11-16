@@ -40,6 +40,18 @@ class RecoveryTicketRepository:
 
         return result.scalar_one_or_none()
 
+    async def get_by_hash(self, ticket_hash: str) -> RecoveryTicket | None:
+        result = await self._db.execute(
+            select(RecoveryTicket)
+            .where(
+                RecoveryTicket.ticket == ticket_hash,
+                RecoveryTicket.expires_at > datetime.now(timezone.utc),
+                RecoveryTicket.used_at.is_(None)
+            )
+        )
+
+        return result.scalar_one_or_none()
+
     async def invalidate(self, recovery_ticket_id: UUID):
         await self._db.execute(
             update(RecoveryTicket)

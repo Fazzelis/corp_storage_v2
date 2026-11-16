@@ -5,7 +5,8 @@ from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
     InvalidLoginOrPassword,
     RefreshTokenNotFound,
-    InvalidRecoveryCode
+    InvalidRecoveryCode,
+    InvalidTicket
 )
 from core.utils.jwt_util import JwtCodec
 from core.utils.password_generator import default_password_generator
@@ -27,6 +28,7 @@ from core.enums.refresh_token_status_enum import RefreshTokenStatusEnum
 from logging import getLogger
 from uuid import UUID
 import secrets
+import hashlib
 
 
 class AuthService:
@@ -176,10 +178,29 @@ class AuthService:
             await self._recovery_ticket_repository.invalidate(recovery_ticket_id=old_recovery_ticket.id)
         await self._recovery_ticket_repository.post(
             user_id=user.id,
-            ticket_hash=hasher.hash(recovery_ticket)
+            ticket_hash=hashlib.sha256(recovery_ticket.encode("utf-8")).hexdigest()
         )
 
         return RecoveryTicketDto(
             recovery_ticket=recovery_ticket,
             expires_at=recovery_code_db.expires_at,
+        )
+
+    async def change_password(
+            self,
+            recovery_ticket: str,
+            new_password: str
+    ):
+        recovery_ticket_hash = hashlib.sha256(recovery_ticket.encode("utf-8")).hexdigest()
+        ticket_db = await self._recovery_ticket_repository.get_by_hash(ticket_hash=recovery_ticket_hash)
+        if not ticket_db:
+            raise InvalidTicket()
+        user = await self._user_repository.get_by_id(user_id=ticket_db.user_id)
+        if not user:
+            raise InvalidTicket()
+        await self._user_repository.patch_user(user_id=user.id, payload={"password": hasher.hash(new_password)})
+        await self._recovery_ticket_repository.invalidate(recovery_ticket_id=ticket_db.id)
+
+        return DefaultDto(
+            message="Пароль успешно изменен"
         )

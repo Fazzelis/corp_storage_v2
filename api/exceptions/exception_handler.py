@@ -2,7 +2,8 @@ from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
     InvalidLoginOrPassword,
     RefreshTokenNotFound,
-    InvalidRecoveryCode
+    InvalidRecoveryCode,
+    InvalidTicket
 )
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,
@@ -41,6 +42,12 @@ class ExceptionHandler:
         )
 
     async def invalid_recover_code_handler(self, exc: InvalidRecoveryCode):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
+    async def invalid_ticket_handler(self, exc: InvalidTicket):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc)
