@@ -1,7 +1,7 @@
 from database.database import Base
 
 from uuid import UUID, uuid4
-from sqlalchemy import Uuid, Enum, DateTime, ForeignKey, String
+from sqlalchemy import Uuid, Integer, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime, timezone
 
@@ -14,6 +14,8 @@ class RecoveryCode(Base):
         nullable=False
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     user_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("user.id", ondelete="CASCADE"),

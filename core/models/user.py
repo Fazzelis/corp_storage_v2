@@ -34,3 +34,8 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+    recovery_tickets: Mapped[list["RecoveryTicket"]] = relationship(
+        "RecoveryTicket",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
