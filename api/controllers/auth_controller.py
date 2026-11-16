@@ -9,6 +9,8 @@ from api.schemas.auth_schemas import (
     LoginRequest,
     TokenInfoResponse,
     LoginResponse,
+    SendRecoveryCodeRequest,
+    SendRecoveryCodeResponse
 )
 from configuration import settings
 from core.utils.jwt_util import JwtCodec
@@ -109,4 +111,15 @@ async def refresh(
     return TokenInfoResponse(
         token=result.access_token,
         type="Bearer"
+    )
+
+
+@router.post("/password-recovery/send-code", response_model=SendRecoveryCodeResponse)
+async def recover_password(
+        payload: SendRecoveryCodeRequest,
+        auth_service: AuthService = Depends(get_auth_service)
+):
+    result = await auth_service.send_recovery_code(email=payload.email)
+    return SendRecoveryCodeResponse(
+        message=result.message
     )

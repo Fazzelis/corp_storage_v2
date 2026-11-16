@@ -1,5 +1,5 @@
 from core.enums.jwt_type import TokenType
-from core.dto.JwtDtos import JwtDecodedData
+from core.dto.jwt_dto import JwtDecodedData
 from configuration import Config
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,

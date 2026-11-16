@@ -1,6 +1,7 @@
-from core.dto.JwtDtos import JwtDecodedData
+from core.dto.jwt_dto import JwtDecodedData
+from core.dto.default_dto import DefaultDto
 from core.enums.jwt_type import TokenType
-from core.repositories.user_repository import UserRepository
+from core.exceptions.user_exceptions import UserNotFound
 from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
     InvalidLoginOrPassword,
@@ -17,6 +18,8 @@ from core.utils.hasher import hasher
 from configuration import settings
 from core.utils.mail_sender import MailSender
 from core.repositories.refresh_token_repository import RefreshTokenRepository
+from core.repositories.recovery_code_repository import RecoveryCodeRepository
+from core.repositories.user_repository import UserRepository
 from core.enums.refresh_token_status_enum import RefreshTokenStatusEnum
 
 from logging import getLogger
@@ -24,9 +27,14 @@ from uuid import UUID
 
 
 class AuthService:
-    def __init__(self, user_repo: UserRepository, refresh_token_repo: RefreshTokenRepository):
+    def __init__(
+            self, user_repo: UserRepository,
+            refresh_token_repo: RefreshTokenRepository,
+            recovery_code_repo: RecoveryCodeRepository
+    ):
         self._user_repository: UserRepository = user_repo
         self._refresh_token_repository: RefreshTokenRepository = refresh_token_repo
+        self._recovery_code_repository: RecoveryCodeRepository = recovery_code_repo
         self._jwtCodec: JwtCodec = JwtCodec(settings)
         self.logger = getLogger()
         self._mail_sender: MailSender = MailSender()
@@ -122,4 +130,21 @@ class AuthService:
         return SuccessfulRefresh(
             access_token=access_token,
             refresh_token=refresh_token,
+        )
+
+    async def send_recovery_code(self, email: str):
+        user = await self._user_repository.get_by_email(email=email)
+        if not user:
+            return DefaultDto(
+                message="Если пользователь существует, ему отправился код подтверждения на почту"
+            )
+        recovery_code = default_password_generator.generate_password()
+        await self._recovery_code_repository.post(
+            user_id=user.id,
+            code_hash=hasher.hash(recovery_code)
+        )
+        await self._mail_sender.send_recovery_code(to_email=user.email, recovery_code=recovery_code)
+
+        return DefaultDto(
+            message="Если пользователь существует, ему отправился код подтверждения на почту"
         )

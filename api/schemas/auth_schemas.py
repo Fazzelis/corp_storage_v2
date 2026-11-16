@@ -36,3 +36,10 @@ class LoginResponse(BaseModel):
     must_change_password: bool
     patronymic: str | None = None
     avatar_path: str | None = None
+
+
+class SendRecoveryCodeRequest(BaseModel):
+    email: str
+
+class SendRecoveryCodeResponse(BaseModel):
+    message: str
