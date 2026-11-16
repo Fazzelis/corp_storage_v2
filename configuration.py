@@ -13,6 +13,12 @@ class Config(BaseSettings):
     algorithm: str
     private_key: str
     public_key: str
+    generated_password_alphabet: str
+    generated_password_len: int
+    smtp_server: str
+    smtp_port: int
+    email_login: str
+    email_password: str
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

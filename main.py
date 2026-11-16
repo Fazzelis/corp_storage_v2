@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from api.controllers.main_router import main_router
 import logging
 import sys
-import os
+from api.exceptions.reg_exseptions import registrate_all_exceptions
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -12,6 +12,7 @@ logging.basicConfig(
 
 app = FastAPI()
 app.include_router(main_router)
+registrate_all_exceptions(app)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 import os
 from dotenv import load_dotenv
 
@@ -11,7 +11,8 @@ async_session = async_sessionmaker(
     class_=AsyncSession,
     autoflush=False
 )
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 
 async def get_db():
