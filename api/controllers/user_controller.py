@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 
@@ -40,7 +38,7 @@ async def change_password(
         jwt_codec: JwtCodec = Depends(get_jwt_codec)
 ) -> ChangePasswordResponse:
     access_token = jwt_codec.decode(token=credentials.credentials, expected_type=TokenType.ACCESS)
-    result = await user_service.change_password(user_id=UUID(access_token.sub), new_password=payload.new_password)
+    result = await user_service.change_password(user_id=access_token.sub, new_password=payload.new_password)
     return ChangePasswordResponse(
         message=result.message
     )

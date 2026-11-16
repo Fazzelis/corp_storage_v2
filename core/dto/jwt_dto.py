@@ -2,16 +2,20 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+
 from core.enums.jwt_type import TokenType
+from core.enums.user_role_enum import UserRoleEnum
 
 
 @dataclass
 class JwtPayload:
-    sub: str
+    sub: UUID
     type: TokenType
-    exp: Optional[datetime] = None
-    iat: Optional[datetime] = None
-    jti: Optional[str] = None
+    jti: UUID
+    iat: datetime
+    exp: datetime
+    role: UserRoleEnum
+    family_id: UUID | None = None
 
 
 @dataclass
@@ -21,3 +25,5 @@ class JwtDecodedData:
     jti: str
     iat: datetime
     exp: datetime
+    role: UserRoleEnum
+    family_id: UUID | None = None

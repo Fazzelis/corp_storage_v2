@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class RegistrateRequest(BaseModel):
@@ -32,6 +33,33 @@ class LoginResponse(BaseModel):
     email: str
     name: str
     surname: str
-    token: TokenInfoResponse
     patronymic: str | None = None
+    token: TokenInfoResponse
+    must_change_password: bool
     avatar_path: str | None = None
+
+
+class SendRecoveryCodeRequest(BaseModel):
+    email: str
+
+class SendRecoveryCodeResponse(BaseModel):
+    message: str
+
+
+class VerifyRecoveryCodeRequest(BaseModel):
+    email: str
+    recovery_code: str
+
+
+class VerifyRecoveryCodeResponse(BaseModel):
+    recovery_ticket: str
+    expires_at: datetime
+
+
+class ChangePasswordRequest(BaseModel):
+    recovery_ticket: str
+    new_password: str
+
+
+class ChangePasswordResponse(BaseModel):
+    message: str

@@ -24,3 +24,23 @@ class MailSender:
         server.sendmail(settings.email_login, to_email, msg.as_string())
 
         server.quit()
+
+    async def send_recovery_code(self, to_email: str, recovery_code: str):
+        server = smtplib.SMTP(settings.smtp_server, int(settings.smtp_port))
+        server.starttls()
+        server.ehlo()
+
+        server.login(settings.email_login, settings.email_password)
+
+        msg = MIMEText(
+            f"Ваш код для восстановления пароля: {recovery_code}. Если не вы его запросили, игнорируйте данное сообщение.",
+            "plain",
+            "utf-8"
+        )
+        msg["Subject"] = Header("Восстановление пароля от корпоративного хранилища", "utf-8")
+        msg["From"] = settings.email_login
+        msg["To"] = to_email
+
+        server.sendmail(settings.email_login, to_email, msg.as_string())
+
+        server.quit()

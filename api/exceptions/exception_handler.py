@@ -1,6 +1,9 @@
 from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
-    InvalidLoginOrPassword
+    InvalidLoginOrPassword,
+    RefreshTokenNotFound,
+    InvalidRecoveryCode,
+    InvalidTicket
 )
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,
@@ -8,6 +11,11 @@ from core.exceptions.jwt_exceptions import (
     WrongTokenTypeException,
     TokenDecodeException
 )
+from core.exceptions.user_exceptions import (
+    UserNotFound,
+    UserMustChangePassword
+)
+
 from fastapi import HTTPException, status
 
 
@@ -24,6 +32,24 @@ class ExceptionHandler:
     async def invalid_login_or_password_handler(self, exc: InvalidLoginOrPassword):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc)
+        )
+
+    async def refresh_token_not_found_handler(self, exc: RefreshTokenNotFound):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exc)
+        )
+
+    async def invalid_recover_code_handler(self, exc: InvalidRecoveryCode):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
+    async def invalid_ticket_handler(self, exc: InvalidTicket):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc)
         )
 
@@ -46,6 +72,18 @@ class ExceptionHandler:
         )
 
     async def token_decode_exception_handler(self, exc: TokenDecodeException):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exc)
+        )
+
+    async def user_not_found_exception_handler(self, exc: UserNotFound):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc)
+        )
+
+    async def user_must_change_password_exception_handler(self, exc: UserMustChangePassword):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc)
