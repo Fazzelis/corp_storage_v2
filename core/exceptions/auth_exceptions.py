@@ -9,3 +9,18 @@ class UserAlreadyRegistered(BaseApplicationException):
 class InvalidLoginOrPassword(BaseApplicationException):
     def __init__(self):
         super().__init__("Неправильная почта или пароль")
+
+
+class RefreshTokenNotFound(BaseApplicationException):
+    def __init__(self):
+        super().__init__("Refresh токен не найден")
+
+
+class InvalidRecoveryCode(BaseApplicationException):
+    def __init__(self):
+        super().__init__("Неправильный код")
+
+
+class InvalidTicket(BaseApplicationException):
+    def __init__(self):
+        super().__init__("Неправильный тикет восстановления пароля")

@@ -38,7 +38,6 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     async def patch_user(self, user_id: UUID, payload: dict):
-        print(payload)
         result = await self._db_session.execute(
             update(User)
             .where(User.id == user_id)
