@@ -119,7 +119,7 @@ async def refresh(
 
 
 @router.post("/password-recovery/send-code", response_model=SendRecoveryCodeResponse)
-async def send_recover_password(
+async def send_recovery_password(
         payload: SendRecoveryCodeRequest,
         auth_service: AuthService = Depends(get_auth_service)
 ):

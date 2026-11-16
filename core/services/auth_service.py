@@ -9,7 +9,7 @@ from core.exceptions.auth_exceptions import (
     InvalidTicket
 )
 from core.utils.jwt_util import JwtCodec
-from core.utils.password_generator import default_password_generator
+from core.utils.password_generator import default_password_generator, PasswordGenerator
 from core.dto.auth_dto import (
     SuccessfulUserRegistration,
     SuccessfulUserLogin,
@@ -148,7 +148,8 @@ class AuthService:
         old_recovery_code = await self._recovery_code_repository.get_by_user_id(user_id=user.id)
         if old_recovery_code:
             await self._recovery_code_repository.invalidate(recovery_code_id=old_recovery_code.id)
-        recovery_code = default_password_generator.generate_password()
+        password_generator = PasswordGenerator(chars_list=list("0123456789"), password_len=6)
+        recovery_code = password_generator.generate_password()
         await self._recovery_code_repository.post(
             user_id=user.id,
             code_hash=hasher.hash(recovery_code)
