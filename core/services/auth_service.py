@@ -78,10 +78,25 @@ class AuthService:
             avatar_path=created_user.avatar_path
         )
 
-    async def login(self, email: str, password: str) -> SuccessfulUserLogin:
+    async def login(self, email: str, password: str) -> SuccessfulUserLogin | RecoveryTicketDto:
         user = await self._user_repository.get_by_email(email)
         if not user or not hasher.verify(password, user.password):
             raise InvalidLoginOrPassword()
+
+        if user.must_change_password:
+            recovery_ticket = secrets.token_urlsafe(32)
+            old_recovery_ticket = await self._recovery_ticket_repository.get_by_user_id(user_id=user.id)
+            if old_recovery_ticket:
+                await self._recovery_ticket_repository.invalidate(recovery_ticket_id=old_recovery_ticket.id)
+            recovery_ticket_db = await self._recovery_ticket_repository.post(
+                user_id=user.id,
+                ticket_hash=hashlib.sha256(recovery_ticket.encode("utf-8")).hexdigest()
+            )
+
+            return RecoveryTicketDto(
+                recovery_ticket=recovery_ticket,
+                expires_at=recovery_ticket_db.expires_at,
+            )
 
         access_token, _ = self._jwtCodec.encode(user_id=user.id, role=user.role, token_type=TokenType.ACCESS)
         refresh_token, refresh_info = self._jwtCodec.encode(user_id=user.id, role=user.role, token_type=TokenType.REFRESH)
@@ -177,14 +192,14 @@ class AuthService:
         old_recovery_ticket = await self._recovery_ticket_repository.get_by_user_id(user_id=user.id)
         if old_recovery_ticket:
             await self._recovery_ticket_repository.invalidate(recovery_ticket_id=old_recovery_ticket.id)
-        await self._recovery_ticket_repository.post(
+        recovery_ticket_db = await self._recovery_ticket_repository.post(
             user_id=user.id,
             ticket_hash=hashlib.sha256(recovery_ticket.encode("utf-8")).hexdigest()
         )
 
         return RecoveryTicketDto(
             recovery_ticket=recovery_ticket,
-            expires_at=recovery_code_db.expires_at,
+            expires_at=recovery_ticket_db.expires_at,
         )
 
     async def change_password(
@@ -199,7 +214,13 @@ class AuthService:
         user = await self._user_repository.get_by_id(user_id=ticket_db.user_id)
         if not user:
             raise InvalidTicket()
-        await self._user_repository.patch_user(user_id=user.id, payload={"password": hasher.hash(new_password)})
+        await self._user_repository.patch_user(
+            user_id=user.id,
+            payload={
+                "password": hasher.hash(new_password),
+                "must_change_password": False
+            }
+        )
         await self._recovery_ticket_repository.invalidate(recovery_ticket_id=ticket_db.id)
 
         return DefaultDto(

@@ -34,7 +34,7 @@ class RecoveryTicketRepository:
             .where(
                 RecoveryTicket.user_id == user_id,
                 RecoveryTicket.used_at.is_(None),
-                RecoveryTicket.expires_at < datetime.now(timezone.utc)
+                RecoveryTicket.expires_at > datetime.now(timezone.utc)
             )
         )
 

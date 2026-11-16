@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Response, HTTPException, status, Cookie
 from fastapi.security import HTTPAuthorizationCredentials
 
+from core.dto.auth_dto import RecoveryTicketDto
 from core.services.auth_service import AuthService
 from core.dependencies import get_auth_service, get_jwt_codec
 from api.schemas.auth_schemas import (
@@ -56,17 +57,23 @@ async def registrate(
     )
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login")
 async def login(
         payload: LoginRequest,
         response: Response,
         auth_service: AuthService = Depends(get_auth_service)
-) -> LoginResponse:
-    user_info = await auth_service.login(payload.email, payload.password)
+) -> LoginResponse | VerifyRecoveryCodeResponse:
+    result = await auth_service.login(payload.email, payload.password)
+
+    if isinstance(result, RecoveryTicketDto):
+        return VerifyRecoveryCodeResponse(
+            recovery_ticket=result.recovery_ticket,
+            expires_at=result.expires_at
+        )
 
     response.set_cookie(
         key="refresh_token",
-        value=user_info.refresh_token,
+        value=result.refresh_token,
         httponly=True,
         secure=True,
         samesite="none",
@@ -74,17 +81,17 @@ async def login(
     )
 
     return LoginResponse(
-        id=str(user_info.id),
-        email=user_info.email,
-        name=user_info.name,
-        surname=user_info.surname,
+        id=str(result.id),
+        email=result.email,
+        name=result.name,
+        surname=result.surname,
         token=TokenInfoResponse(
-            token=user_info.access_token,
+            token=result.access_token,
             type="Bearer"
         ),
-        patronymic=user_info.patronymic,
-        avatar_path=user_info.avatar_path,
-        must_change_password=user_info.must_change_password
+        patronymic=result.patronymic,
+        avatar_path=result.avatar_path,
+        must_change_password=result.must_change_password
     )
 
 
