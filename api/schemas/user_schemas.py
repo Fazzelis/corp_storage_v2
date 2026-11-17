@@ -1,14 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class ChangePasswordRequest(BaseModel):
-    new_password: str
-
-
-class ChangePasswordResponse(BaseModel):
-    message: str
-
-
 class ChangeProfileInfoRequest(BaseModel):
     email: str | None = None
     name: str | None = None
