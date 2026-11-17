@@ -33,3 +33,8 @@ class TooBigFileSizeAvatarException(BaseApplicationException):
 class FailToWriteAvatarException(BaseApplicationException):
     def __init__(self):
         super().__init__("Ошибка записи файла")
+
+
+class ImageNotFoundAvatarException(BaseApplicationException):
+    def __init__(self):
+        super().__init__("Файл не найден")

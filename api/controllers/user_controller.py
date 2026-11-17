@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.responses import FileResponse
 
 from api.schemas.user_schemas import (
     ChangeProfileInfoRequest,
@@ -43,14 +44,32 @@ async def change_profile_info(
     return UserInfoResponse.model_validate(result)
 
 
-@router.post("/change-profile-info/avatar")
+@router.post("/change-profile-info/avatar", response_model=DefaultResponse)
 async def change_avatar(
         avatar: UploadFile = File(...),
         credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
         user_service: UserService = Depends(get_user_service),
         jwt_codec: JwtCodec = Depends(get_jwt_codec)
-):
+) -> DefaultResponse:
     decoded_jwt = jwt_codec.decode(token=credentials.credentials, expected_type=TokenType.ACCESS)
     result = await user_service.set_avatar(avatar=avatar, user_id=decoded_jwt.sub)
 
     return DefaultResponse(message=result.message)
+
+
+@router.get("/profile/avatar")
+async def get_avatar(
+        credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
+        user_service: UserService = Depends(get_user_service),
+        jwt_codec: JwtCodec = Depends(get_jwt_codec)
+):
+    decoded_jwt = jwt_codec.decode(token=credentials.credentials, expected_type=TokenType.ACCESS)
+    result = await user_service.get_avatar_path(user_id=decoded_jwt.sub)
+    if not result:
+        return DefaultResponse(message="Аватарка не задана")
+    return FileResponse(
+        path=result,
+        media_type='image/png' if result.suffix == ".png" else 'image/jpg',
+        filename=result.name,
+        headers={"Cache-Control": "public, max-age=86400"}
+    )

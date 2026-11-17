@@ -13,7 +13,6 @@ class UserInfoResponse(BaseModel):
     name: str
     surname: str
     patronymic: str | None
-    avatar_path: str | None
     must_change_password: bool
 
     model_config = ConfigDict(from_attributes=True)

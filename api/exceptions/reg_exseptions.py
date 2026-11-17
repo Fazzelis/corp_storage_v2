@@ -23,7 +23,8 @@ from core.exceptions.avatar_exceptions import (
     TooSmallResolutionAvatarException,
     NotImageAvatarException,
     TooBigFileSizeAvatarException,
-    FailToWriteAvatarException
+    FailToWriteAvatarException,
+    ImageNotFoundAvatarException
 )
 from api.exceptions.exception_handler import ExceptionHandler
 
@@ -100,4 +101,8 @@ def registrate_all_exceptions(app: FastAPI):
     app.add_exception_handler(
         FailToWriteAvatarException,
         ExceptionHandler.fail_to_write_avatar_exception_handler
+    )
+    app.add_exception_handler(
+        ImageNotFoundAvatarException,
+        ExceptionHandler.image_not_found_avatar_exception_handler
     )

@@ -9,7 +9,8 @@ from core.exceptions.avatar_exceptions import (
     TooSmallResolutionAvatarException,
     NotImageAvatarException,
     TooBigFileSizeAvatarException,
-    FailToWriteAvatarException
+    FailToWriteAvatarException,
+    ImageNotFoundAvatarException
 )
 from core.dto.user_dto import UserDto
 
@@ -118,3 +119,17 @@ class UserService:
             import traceback
             traceback.print_exc()
             raise FailToWriteAvatarException()
+
+    async def get_avatar_path(self, user_id: UUID) -> Path | None:
+        user = await self._user_repository.get_by_id(user_id=user_id)
+        if not user:
+            raise UserNotFound()
+
+        if not user.avatar_path:
+            return None
+
+        file_path = Path(user.avatar_path)
+        if not file_path.is_file():
+            raise ImageNotFoundAvatarException()
+
+        return file_path
