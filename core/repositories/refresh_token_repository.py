@@ -53,3 +53,16 @@ class RefreshTokenRepository:
             )
         )
         await self._db.commit()
+
+    async def set_revoked(self, jti: UUID):
+        await self._db.execute(
+            update(RefreshToken)
+            .where(
+                RefreshToken.jti == jti,
+                RefreshToken.status == RefreshTokenStatusEnum.ACTIVE
+            )
+            .values(
+                revoked_at=datetime.now(timezone.utc),
+                status=RefreshTokenStatusEnum.REVOKED
+            )
+        )

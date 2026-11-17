@@ -1,6 +1,7 @@
 from core.dto.jwt_dto import JwtDecodedData
 from core.dto.default_dto import DefaultDto
 from core.enums.jwt_type import TokenType
+from core.enums.user_role_enum import UserRoleEnum
 from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
     InvalidLoginOrPassword,
@@ -130,12 +131,12 @@ class AuthService:
 
         access_token, _ = self._jwtCodec.encode(
             user_id=old_refresh_token_db.user_id,
-            role=old_refresh_token.role,
+            role=UserRoleEnum(old_refresh_token.role),
             token_type=TokenType.ACCESS
         )
         refresh_token, refresh_info = self._jwtCodec.encode(
             user_id=old_refresh_token_db.user_id,
-            role=old_refresh_token.role,
+            role=UserRoleEnum(old_refresh_token.role),
             token_type=TokenType.REFRESH,
             family_id=old_refresh_token_db.family_id
         )
@@ -153,6 +154,15 @@ class AuthService:
             access_token=access_token,
             refresh_token=refresh_token,
         )
+
+    async def logout(self, refresh_token: JwtDecodedData):
+        refresh_token_db = await self._refresh_token_repository.get_by_jti(jti=UUID(refresh_token.jti))
+        if not refresh_token_db:
+            raise RefreshTokenNotFound()
+        await self._refresh_token_repository.set_revoked(jti=refresh_token_db.jti)
+
+        return DefaultDto(message="Выход из аккаунта завершен успешно")
+
 
     async def send_recovery_code(self, email: str):
         user = await self._user_repository.get_by_email(email=email)
