@@ -5,6 +5,15 @@ from core.exceptions.auth_exceptions import (
     InvalidRecoveryCode,
     InvalidTicket
 )
+from core.exceptions.avatar_exceptions import (
+    EmptyAvatarException,
+    UnsupportedAvatarTypeException,
+    TooBigResolutionAvatarException,
+    TooSmallResolutionAvatarException,
+    NotImageAvatarException,
+    TooBigFileSizeAvatarException,
+    FailToWriteAvatarException
+)
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,
     ExpiredTokenException,
@@ -86,5 +95,47 @@ class ExceptionHandler:
     async def user_must_change_password_exception_handler(self, exc: UserMustChangePassword):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exc)
+        )
+
+    async def empty_avatar_exception_handler(self, exc: EmptyAvatarException):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
+    async def unsupported_avatar_type_exception_handler(self, exc: UnsupportedAvatarTypeException):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
+    async def too_big_resolution_avatar_exception_handler(self, exc: TooBigResolutionAvatarException):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
+    async def too_small_resolution_avatar_exception_handler(self, exc: TooSmallResolutionAvatarException):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
+    async def not_a_image_avatar_exception_handler(self, exc: NotImageAvatarException):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
+    async def too_big_file_size_avatar_exception_handler(self, exc: TooBigFileSizeAvatarException):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+
+    async def fail_to_write_avatar_exception_handler(self, exc: FailToWriteAvatarException):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc)
         )

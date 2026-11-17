@@ -16,7 +16,7 @@ from api.schemas.auth_schemas import (
     ChangePasswordRequest,
     ChangePasswordResponse
 )
-from api.schemas.default_schema import DefaultSchema
+from api.schemas.default_schema import DefaultResponse
 from configuration import settings
 from core.utils.jwt_util import JwtCodec
 from core.enums.jwt_type import TokenType
@@ -28,13 +28,13 @@ router = APIRouter(
 )
 
 
-@router.post("/registration", response_model=DefaultSchema)
+@router.post("/registration", response_model=DefaultResponse)
 async def registrate(
         payload: RegistrateRequest,
         jwt_codec: JwtCodec = Depends(get_jwt_codec),
         credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
         auth_service: AuthService = Depends(get_auth_service)
-) -> DefaultSchema:
+) -> DefaultResponse:
     access_token = jwt_codec.decode(credentials.credentials, TokenType.ACCESS)
     if access_token.role != UserRoleEnum.DIRECTOR.value:
         raise HTTPException(
@@ -47,7 +47,7 @@ async def registrate(
         surname=payload.surname,
         patronymic=payload.patronymic
     )
-    return DefaultSchema(
+    return DefaultResponse(
         message="Пользователь успешно зарегистрирован!"
     )
 
@@ -113,13 +113,13 @@ async def refresh(
     )
 
 
-@router.post("/logout", response_model=DefaultSchema)
+@router.post("/logout", response_model=DefaultResponse)
 async def logout(
         response: Response,
         refresh_token: str | None = Cookie(default=None),
         auth_service: AuthService = Depends(get_auth_service),
         jwt_codec: JwtCodec = Depends(get_jwt_codec),
-) -> DefaultSchema:
+) -> DefaultResponse:
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -130,7 +130,7 @@ async def logout(
 
     response.delete_cookie(key="refresh_token", secure=True, samesite='none', httponly=True)
 
-    return DefaultSchema(message=result.message)
+    return DefaultResponse(message=result.message)
 
 
 @router.post("/password-recovery/send-code", response_model=SendRecoveryCodeResponse)
