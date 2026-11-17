@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Response, HTTPException, status, Cookie
 from fastapi.security import HTTPAuthorizationCredentials
 
 from core.dto.auth_dto import RecoveryTicketDto
-from core.dto.default_dto import DefaultDto
 from core.services.auth_service import AuthService
 from core.dependencies import get_auth_service, get_jwt_codec
 from api.schemas.auth_schemas import (
@@ -17,6 +16,7 @@ from api.schemas.auth_schemas import (
     ChangePasswordRequest,
     ChangePasswordResponse
 )
+from api.schemas.default_schema import DefaultSchema
 from configuration import settings
 from core.utils.jwt_util import JwtCodec
 from core.enums.jwt_type import TokenType
@@ -28,13 +28,13 @@ router = APIRouter(
 )
 
 
-@router.post("/registration", response_model=DefaultDto)
+@router.post("/registration", response_model=DefaultSchema)
 async def registrate(
         payload: RegistrateRequest,
         jwt_codec: JwtCodec = Depends(get_jwt_codec),
         credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
         auth_service: AuthService = Depends(get_auth_service)
-) -> DefaultDto:
+) -> DefaultSchema:
     access_token = jwt_codec.decode(credentials.credentials, TokenType.ACCESS)
     if access_token.role != UserRoleEnum.DIRECTOR.value:
         raise HTTPException(
@@ -47,7 +47,7 @@ async def registrate(
         surname=payload.surname,
         patronymic=payload.patronymic
     )
-    return DefaultDto(
+    return DefaultSchema(
         message="Пользователь успешно зарегистрирован!"
     )
 
@@ -89,7 +89,7 @@ async def refresh(
         refresh_token: str | None = Cookie(default=None),
         auth_service: AuthService = Depends(get_auth_service),
         jwt_codec: JwtCodec = Depends(get_jwt_codec),
-):
+) -> TokenInfoResponse:
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -113,11 +113,31 @@ async def refresh(
     )
 
 
+@router.post("/logout", response_model=DefaultSchema)
+async def logout(
+        response: Response,
+        refresh_token: str | None = Cookie(default=None),
+        auth_service: AuthService = Depends(get_auth_service),
+        jwt_codec: JwtCodec = Depends(get_jwt_codec),
+) -> DefaultSchema:
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh токен не найден"
+        )
+    decoded_refresh_token = jwt_codec.decode(refresh_token, expected_type=TokenType.REFRESH)
+    result = await auth_service.logout(refresh_token=decoded_refresh_token)
+
+    response.delete_cookie(key="refresh_token", secure=True, samesite='none', httponly=True)
+
+    return DefaultSchema(message=result.message)
+
+
 @router.post("/password-recovery/send-code", response_model=SendRecoveryCodeResponse)
 async def send_recovery_password(
         payload: SendRecoveryCodeRequest,
         auth_service: AuthService = Depends(get_auth_service)
-):
+) -> SendRecoveryCodeResponse:
     result = await auth_service.send_recovery_code(email=payload.email)
     return SendRecoveryCodeResponse(
         message=result.message
@@ -134,11 +154,11 @@ async def verify_recovery_code(
         recovery_ticket=result.recovery_ticket
     )
 
-@router.post("password-recovery/change-password")
+@router.post("/password-recovery/change-password", response_model=ChangePasswordResponse)
 async def change_password(
         payload: ChangePasswordRequest,
         auth_service: AuthService = Depends(get_auth_service)
-):
+) -> ChangePasswordResponse:
     result = await auth_service.change_password(
         recovery_ticket=payload.recovery_ticket,
         new_password=payload.new_password
