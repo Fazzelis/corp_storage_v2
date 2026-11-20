@@ -40,7 +40,7 @@ async def change_profile_info(
     payload_dict = payload.model_dump(exclude_unset=True)
     if len(payload_dict) == 0:
         return DefaultResponse(message="Обновлять нечего")
-    result = await user_service.patch_user(user_id=access_token.sub, payload=payload.model_dump(exclude_unset=True))
+    result = await user_service.patch_user(user_id=access_token.sub, payload=payload_dict)
     return UserInfoResponse.model_validate(result)
 
 
