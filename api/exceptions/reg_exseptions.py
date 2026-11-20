@@ -16,6 +16,16 @@ from core.exceptions.user_exceptions import (
     UserNotFound,
     UserMustChangePassword
 )
+from core.exceptions.avatar_exceptions import (
+    EmptyAvatarException,
+    UnsupportedAvatarTypeException,
+    TooBigResolutionAvatarException,
+    TooSmallResolutionAvatarException,
+    NotImageAvatarException,
+    TooBigFileSizeAvatarException,
+    FailToWriteAvatarException,
+    ImageNotFoundAvatarException
+)
 from api.exceptions.exception_handler import ExceptionHandler
 
 
@@ -63,4 +73,36 @@ def registrate_all_exceptions(app: FastAPI):
     app.add_exception_handler(
         UserMustChangePassword,
         ExceptionHandler.user_must_change_password_exception_handler
+    )
+    app.add_exception_handler(
+        EmptyAvatarException,
+        ExceptionHandler.empty_avatar_exception_handler
+    )
+    app.add_exception_handler(
+        UnsupportedAvatarTypeException,
+        ExceptionHandler.unsupported_avatar_type_exception_handler
+    )
+    app.add_exception_handler(
+        TooBigResolutionAvatarException,
+        ExceptionHandler.too_big_resolution_avatar_exception_handler
+    )
+    app.add_exception_handler(
+        TooSmallResolutionAvatarException,
+        ExceptionHandler.too_small_resolution_avatar_exception_handler
+    )
+    app.add_exception_handler(
+        NotImageAvatarException,
+        ExceptionHandler.not_a_image_avatar_exception_handler
+    )
+    app.add_exception_handler(
+        TooBigFileSizeAvatarException,
+        ExceptionHandler.too_big_file_size_avatar_exception_handler
+    )
+    app.add_exception_handler(
+        FailToWriteAvatarException,
+        ExceptionHandler.fail_to_write_avatar_exception_handler
+    )
+    app.add_exception_handler(
+        ImageNotFoundAvatarException,
+        ExceptionHandler.image_not_found_avatar_exception_handler
     )

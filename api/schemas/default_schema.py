@@ -1,4 +1,4 @@
 from pydantic import BaseModel
 
-class DefaultSchema(BaseModel):
+class DefaultResponse(BaseModel):
     message: str

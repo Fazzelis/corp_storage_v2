@@ -1,10 +1,5 @@
 from dataclasses import dataclass
 
-
-@dataclass
-class PasswordChangedDto:
-    message: str
-
 @dataclass
 class UserDto:
     email: str

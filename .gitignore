@@ -5,3 +5,4 @@ alembic.ini
 migration/README
 __pycache__/
 *.docx
+attachments/
