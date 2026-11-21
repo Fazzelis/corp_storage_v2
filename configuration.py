@@ -41,6 +41,8 @@ class Config(BaseSettings):
     avatar_fil_formats: set = {"JPEG", "PNG"}
     avatars_dir: str = "attachments/employer-avatars"
 
+    recovery_code_attempts: int = 5
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

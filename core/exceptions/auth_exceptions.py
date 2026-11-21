@@ -24,3 +24,8 @@ class InvalidRecoveryCode(BaseApplicationException):
 class InvalidTicket(BaseApplicationException):
     def __init__(self):
         super().__init__("Неправильный тикет восстановления пароля")
+
+
+class TooManyAttempts(BaseApplicationException):
+    def __init__(self):
+        super().__init__("Слишком много попыток, попробуйте позже.")

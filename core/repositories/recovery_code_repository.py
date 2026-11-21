@@ -49,8 +49,7 @@ class RecoveryCodeRepository:
             .where(
                 RecoveryCode.user_id == user_id,
                 RecoveryCode.used_at.is_(None),
-                RecoveryCode.expires_at > datetime.now(timezone.utc),
-                RecoveryCode.attempts < 5
+                RecoveryCode.expires_at > datetime.now(timezone.utc)
             )
         )
 

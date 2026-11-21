@@ -7,7 +7,8 @@ from core.exceptions.auth_exceptions import (
     InvalidLoginOrPassword,
     RefreshTokenNotFound,
     InvalidRecoveryCode,
-    InvalidTicket
+    InvalidTicket,
+    TooManyAttempts
 )
 from core.utils.jwt_util import JwtCodec
 from core.utils.password_generator import default_password_generator, PasswordGenerator
@@ -193,6 +194,8 @@ class AuthService:
         recovery_code_db = await self._recovery_code_repository.get_by_user_id(user_id=user.id)
         if not recovery_code_db:
             raise InvalidRecoveryCode()
+        if recovery_code_db.attempts >= settings.recovery_code_attempts:
+            raise TooManyAttempts()
         if not hasher.verify(recovery_code, recovery_code_db.code):
             await self._recovery_code_repository.add_attempt(recovery_code_id=recovery_code_db.id)
             raise InvalidRecoveryCode()
