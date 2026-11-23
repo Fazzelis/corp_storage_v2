@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 
 from api.schemas.user_schemas import (
     ChangeProfileInfoRequest,
-    UserInfoResponse
+    UserInfoResponse, UserShortInfoResponse
 )
 from api.schemas.default_schema import DefaultResponse
 from configuration import settings
@@ -23,10 +23,25 @@ async def get_profile(
     credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
     user_service: UserService = Depends(get_user_service),
     jwt_codec: JwtCodec = Depends(get_jwt_codec)
-):
+) -> UserInfoResponse:
     access_token = jwt_codec.decode(token=credentials.credentials, expected_type=TokenType.ACCESS)
     user_dto = await user_service.get_user(user_id=access_token.sub)
     return UserInfoResponse.model_validate(user_dto)
+
+
+@router.get("/profile/short", response_model=UserShortInfoResponse)
+async def get_short_profile(
+        credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
+        user_service: UserService = Depends(get_user_service),
+        jwt_codec: JwtCodec = Depends(get_jwt_codec)
+) -> UserShortInfoResponse:
+    access_token = jwt_codec.decode(token=credentials.credentials, expected_type=TokenType.ACCESS)
+    short_profile_info = await user_service.get_short_profile_info(user_id=access_token.sub)
+    return UserShortInfoResponse(
+        name=short_profile_info.name,
+        surname=short_profile_info.surname,
+        role=short_profile_info.role,
+    )
 
 
 @router.patch("/change-profile-info", response_model=UserInfoResponse | DefaultResponse)

@@ -8,3 +8,10 @@ class UserDto:
     patronymic: str | None
     avatar_path: str | None
     must_change_password: bool
+
+
+@dataclass
+class UserShortDto:
+    name: str
+    surname: str
+    role: str
