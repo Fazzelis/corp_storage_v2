@@ -13,6 +13,7 @@ class RecoveryCode(Base):
         DateTime(timezone=True),
         nullable=False
     )
+    resend_available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

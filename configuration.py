@@ -43,6 +43,8 @@ class Config(BaseSettings):
 
     recovery_code_attempts: int = 5
 
+    resend_code_timer: int = 60 # секунды
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

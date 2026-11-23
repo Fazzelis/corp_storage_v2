@@ -29,3 +29,9 @@ class InvalidTicket(BaseApplicationException):
 class TooManyAttempts(BaseApplicationException):
     def __init__(self):
         super().__init__("Слишком много попыток, попробуйте позже.")
+
+
+class TooSoonToResendCode(BaseApplicationException):
+    def __init__(self):
+        super().__init__("Неудалось отправить код, попробуйте позже")
+

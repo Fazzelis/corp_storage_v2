@@ -20,14 +20,14 @@ class TokenInfoResponse(BaseModel):
 
 class LoginResponse(BaseModel):
     token: TokenInfoResponse
-    must_change_password: bool
+    role: str
 
 
 class SendRecoveryCodeRequest(BaseModel):
     email: EmailStr
 
 class SendRecoveryCodeResponse(BaseModel):
-    message: str
+    time_for_resend: int
 
 
 class VerifyRecoveryCodeRequest(BaseModel):
