@@ -18,7 +18,7 @@ router = APIRouter(
     tags=["User"]
 )
 
-@router.get("/profile")
+@router.get("/profile", response_model=UserInfoResponse)
 async def get_profile(
     credentials: HTTPAuthorizationCredentials = Depends(settings.http_bearer),
     user_service: UserService = Depends(get_user_service),

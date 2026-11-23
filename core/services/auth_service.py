@@ -7,7 +7,9 @@ from core.exceptions.auth_exceptions import (
     InvalidLoginOrPassword,
     RefreshTokenNotFound,
     InvalidRecoveryCode,
-    InvalidTicket
+    InvalidTicket,
+    TooManyAttempts,
+    TooSoonToResendCode
 )
 from core.utils.jwt_util import JwtCodec
 from core.utils.password_generator import default_password_generator, PasswordGenerator
@@ -15,7 +17,8 @@ from core.dto.auth_dto import (
     SuccessfulUserRegistration,
     SuccessfulUserLogin,
     SuccessfulRefresh,
-    RecoveryTicketDto
+    RecoveryTicketDto,
+    ResendAtRecoveryCodeDto
 )
 from core.utils.hasher import hasher
 from configuration import settings
@@ -30,6 +33,7 @@ from logging import getLogger
 from uuid import UUID
 import secrets
 import hashlib
+from datetime import datetime, timezone
 
 
 class AuthService:
@@ -120,7 +124,8 @@ class AuthService:
             refresh_token=refresh_token,
             patronymic=user.patronymic,
             avatar_path=user.avatar_path,
-            must_change_password=user.must_change_password
+            must_change_password=user.must_change_password,
+            role=user.role
         )
 
     async def refresh(self, old_refresh_token: JwtDecodedData) -> SuccessfulRefresh:
@@ -171,18 +176,20 @@ class AuthService:
                 message="Если пользователь существует, ему отправился код подтверждения на почту"
             )
         old_recovery_code = await self._recovery_code_repository.get_by_user_id(user_id=user.id)
+        if old_recovery_code and old_recovery_code.resend_available_at > datetime.now(timezone.utc):
+            raise TooSoonToResendCode()
         if old_recovery_code:
             await self._recovery_code_repository.invalidate(recovery_code_id=old_recovery_code.id)
         password_generator = PasswordGenerator(chars_list=list("0123456789"), password_len=6)
         recovery_code = password_generator.generate_password()
-        await self._recovery_code_repository.post(
+        await self._mail_sender.send_recovery_code(to_email=user.email, recovery_code=recovery_code)
+        recovery_code_db = await self._recovery_code_repository.post(
             user_id=user.id,
             code_hash=hasher.hash(recovery_code)
         )
-        await self._mail_sender.send_recovery_code(to_email=user.email, recovery_code=recovery_code)
 
-        return DefaultDto(
-            message="Если пользователь существует, ему отправился код подтверждения на почту"
+        return ResendAtRecoveryCodeDto(
+            can_resend_at=max(0, int((recovery_code_db.resend_available_at - datetime.now(timezone.utc)).total_seconds()))
         )
 
     async def verify_recovery_code(self, email: str, recovery_code: str) -> RecoveryTicketDto:
@@ -193,6 +200,8 @@ class AuthService:
         recovery_code_db = await self._recovery_code_repository.get_by_user_id(user_id=user.id)
         if not recovery_code_db:
             raise InvalidRecoveryCode()
+        if recovery_code_db.attempts >= settings.recovery_code_attempts:
+            raise TooManyAttempts()
         if not hasher.verify(recovery_code, recovery_code_db.code):
             await self._recovery_code_repository.add_attempt(recovery_code_id=recovery_code_db.id)
             raise InvalidRecoveryCode()

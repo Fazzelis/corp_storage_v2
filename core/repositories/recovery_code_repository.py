@@ -13,9 +13,11 @@ class RecoveryCodeRepository:
     async def post(self, user_id: UUID, code_hash: str) -> RecoveryCode:
         created_at = datetime.now(timezone.utc)
         expires_at = created_at + timedelta(minutes=settings.recovery_code_ttl)
+        resend_available_at = created_at + timedelta(seconds=settings.resend_code_timer)
         code_db = RecoveryCode(
             code=code_hash,
             created_at=created_at,
+            resend_available_at=resend_available_at,
             expires_at=expires_at,
             user_id=user_id
         )
@@ -49,8 +51,7 @@ class RecoveryCodeRepository:
             .where(
                 RecoveryCode.user_id == user_id,
                 RecoveryCode.used_at.is_(None),
-                RecoveryCode.expires_at > datetime.now(timezone.utc),
-                RecoveryCode.attempts < 5
+                RecoveryCode.expires_at > datetime.now(timezone.utc)
             )
         )
 

@@ -3,7 +3,9 @@ from core.exceptions.auth_exceptions import (
     InvalidLoginOrPassword,
     RefreshTokenNotFound,
     InvalidRecoveryCode,
-    InvalidTicket
+    InvalidTicket,
+    TooManyAttempts,
+    TooSoonToResendCode
 )
 from core.exceptions.avatar_exceptions import (
     EmptyAvatarException,
@@ -144,5 +146,15 @@ class ExceptionHandler:
     async def image_not_found_avatar_exception_handler(self, exc: ImageNotFoundAvatarException):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc)
+        )
+    async def too_many_attempts_recovery_code_exception_handler(self, exc: TooManyAttempts):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+    async def too_soon_to_resend_code_exception_handler(self, exc: TooSoonToResendCode):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc)
         )

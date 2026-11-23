@@ -4,7 +4,10 @@ from core.exceptions.auth_exceptions import (
     UserAlreadyRegistered,
     InvalidLoginOrPassword,
     RefreshTokenNotFound,
-    InvalidRecoveryCode, InvalidTicket
+    InvalidRecoveryCode,
+    InvalidTicket,
+    TooManyAttempts,
+    TooSoonToResendCode
 )
 from core.exceptions.jwt_exceptions import (
     JwtTypeNotFoundException,
@@ -105,4 +108,12 @@ def registrate_all_exceptions(app: FastAPI):
     app.add_exception_handler(
         ImageNotFoundAvatarException,
         ExceptionHandler.image_not_found_avatar_exception_handler
+    )
+    app.add_exception_handler(
+        TooManyAttempts,
+        ExceptionHandler.too_many_attempts_recovery_code_exception_handler
+    )
+    app.add_exception_handler(
+        TooSoonToResendCode,
+        ExceptionHandler.too_soon_to_resend_code_exception_handler
     )

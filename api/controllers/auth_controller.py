@@ -79,7 +79,7 @@ async def login(
             token=result.access_token,
             type="Bearer"
         ),
-        must_change_password=result.must_change_password
+        role=result.role.value
     )
 
 
@@ -140,7 +140,7 @@ async def send_recovery_password(
 ) -> SendRecoveryCodeResponse:
     result = await auth_service.send_recovery_code(email=payload.email)
     return SendRecoveryCodeResponse(
-        message=result.message
+        time_for_resend=result.can_resend_at
     )
 
 
