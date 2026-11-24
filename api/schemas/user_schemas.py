@@ -16,3 +16,9 @@ class UserInfoResponse(BaseModel):
     must_change_password: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserShortInfoResponse(BaseModel):
+    name: str
+    surname: str
+    role: str

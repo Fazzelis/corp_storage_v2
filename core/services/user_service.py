@@ -12,7 +12,7 @@ from core.exceptions.avatar_exceptions import (
     FailToWriteAvatarException,
     ImageNotFoundAvatarException
 )
-from core.dto.user_dto import UserDto
+from core.dto.user_dto import UserDto, UserShortDto
 
 import magic
 from uuid import UUID, uuid4
@@ -31,7 +31,7 @@ class UserService:
     async def get_user(self, user_id: UUID) -> UserDto:
         user = await self._user_repository.get_by_id(user_id=user_id)
         if not user:
-            raise UserNotFound
+            raise UserNotFound()
         if user.must_change_password:
             raise UserMustChangePassword()
         return UserDto(
@@ -41,6 +41,18 @@ class UserService:
             patronymic=user.patronymic,
             avatar_path=user.avatar_path,
             must_change_password=user.must_change_password
+        )
+
+    async def get_short_profile_info(self, user_id: UUID):
+        user = await self._user_repository.get_by_id(user_id=user_id)
+        if not user:
+            raise UserNotFound()
+        if user.must_change_password:
+            raise UserMustChangePassword()
+        return UserShortDto(
+            name=user.name,
+            surname=user.surname,
+            role=user.role.value
         )
 
     async def patch_user(self, user_id: UUID, payload: dict) -> UserDto:
